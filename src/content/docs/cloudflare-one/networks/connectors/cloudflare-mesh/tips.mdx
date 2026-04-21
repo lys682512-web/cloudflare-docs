@@ -59,6 +59,24 @@ Updating a Mesh node means updating the `cloudflare-warp` package on the Linux h
 
    You should see `Status update: Connected` in the output.
 
+## Make IP forwarding persistent
+
+IP forwarding allows a Mesh node to act as a gateway, forwarding packets between its network interface and the Mesh tunnel. This is only required if the node advertises [CIDR routes](/cloudflare-one/networks/connectors/cloudflare-mesh/routes/) — if you are only reaching the node by its Mesh IP, forwarding is not needed.
+
+Older installations may have used `sysctl -w` for IP forwarding, which does not persist across reboots. If your node loses route connectivity after a server restart, run the following to make forwarding permanent:
+
+```sh
+printf 'net.ipv4.ip_forward = 1\nnet.ipv6.conf.all.forwarding = 1\nnet.ipv6.conf.all.accept_ra = 2\n' | sudo tee /etc/sysctl.d/99-zzz-cloudflare-warp-connector.conf && sudo sysctl --system
+```
+
+You can verify the settings are active with:
+
+```sh
+sysctl net.ipv4.ip_forward net.ipv6.conf.all.forwarding net.ipv6.conf.all.accept_ra
+```
+
+New installations include this step automatically.
+
 ## Cloud VPC deployments
 
 When deploying Mesh nodes in a cloud VPC, you may need to configure additional provider settings so the node can forward traffic for other devices on the subnet.
